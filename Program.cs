@@ -16,7 +16,7 @@ namespace HW_9
         private static string fPath = "files";
         private static List<string> filesName;
         private static string msg;
-        
+
         private static ReplyKeyboardMarkup rkm = new ReplyKeyboardMarkup();
         private static List<KeyboardButton[]> rows = new List<KeyboardButton[]>();
         private static List<KeyboardButton> cols = new List<KeyboardButton>();
@@ -117,20 +117,18 @@ namespace HW_9
                     "https://tlgrm.ru/_/stickers/cbe/e09/cbee092b-2911-4290-b015-f8eb4f6c7ec4/11.webp");
             }
 
-            if (filesName.Contains(e.Message.Text))
+            if (filesName.Contains(e.Message.Text) && e.Message.Text != "/start" && e.Message.Text != "/load")
             {
-                
                 // botClient.SendDocumentAsync(e.Message.Chat.Id,
-                // document: e.Message.Text);
-                
-                await using (Stream stream = File.OpenRead($"{fPath}/{msg}"))
+                // document: "https://github.com/TelegramBots/book/raw/master/src/docs/photo-ara.jpg");
+
+                await using (Stream stream = File.OpenRead($"{fPath}/{e.Message.Text}"))
                 {
                     botClient.SendDocumentAsync(
                         chatId: e.Message.Chat.Id,
-                        document: new InputOnlineFile(content: stream, fileName: msg)
+                        document: new InputOnlineFile(content: stream, fileName: e.Message.Text)
                     );
                 }
-               
             }
         }
 
@@ -145,7 +143,6 @@ namespace HW_9
 
         private static void GetFileName()
         {
-            List<string> newList = new List<string>();
             if (Directory.Exists(fPath))
             {
                 filesName = Directory.GetFiles(fPath).ToList();
@@ -153,18 +150,11 @@ namespace HW_9
                 for (int i = 0; i < filesName.Count; i++)
                 {
                     filesName[i] = filesName[i].Remove(0, 6);
-                    newList.Add(filesName[i]);
-                    Console.WriteLine(filesName[i]);
+                    // Console.WriteLine(filesName[i]);
                 }
             }
         }
-
-        private static async void SendFile(string name, Telegram.Bot.Args.MessageEventArgs e)
-        {
-            InputOnlineFile inputOnlineFile = new InputOnlineFile("fileId");
-            await botClient.SendDocumentAsync(e.Message.Chat.Id, inputOnlineFile);
-        }
-
+        
         private static void GetBotStatus()
         {
             var botStatus = botClient.GetMeAsync().Result;
@@ -179,5 +169,11 @@ namespace HW_9
                 dirInfo.Create();
             }
         }
+        
+        // private static async void SendFile(string name, Telegram.Bot.Args.MessageEventArgs e)
+        // {
+        //     InputOnlineFile inputOnlineFile = new InputOnlineFile("fileId");
+        //     await botClient.SendDocumentAsync(e.Message.Chat.Id, inputOnlineFile);
+        // }
     }
 }
