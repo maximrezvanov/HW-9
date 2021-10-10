@@ -82,6 +82,13 @@ namespace HW_9
                     await botClient.SendStickerAsync(e.Message.Chat,
                         "https://tlgrm.ru/_/stickers/697/ba1/697ba160-9c77-3b1a-9d97-86a9ce75ff4d/192/78.webp");
                     break;
+                case MessageType.Audio:
+                    await botClient.SendTextMessageAsync(e.Message.Chat.Id, "sound received and saved");
+                    Console.WriteLine($"File name {e.Message.Audio.FileName}");
+                    Console.WriteLine($"File size {e.Message.Audio.FileSize}");
+                    Console.WriteLine($"File Id {e.Message.Audio.FileId}");
+                    Download(e.Message.Audio.FileId, e.Message.Audio.FileName);
+                    break;
             }
 
             if (e.Message.Text == "/start")
@@ -90,7 +97,7 @@ namespace HW_9
             }
 
             if (e.Message.Type == MessageType.Text && e.Message.Text != "/start" && e.Message.Text != "/load" &&
-                e.Message.Text == "get smile")
+                e.Message.Text == "smile")
             {
                 msg = e.Message.Text;
                 await botClient.SendTextMessageAsync(e.Message.Chat.Id, $"text received");
@@ -98,17 +105,21 @@ namespace HW_9
 
             if (e.Message.Text == "/load")
             {
-                GetFileName();
-                for (var Index = 0; Index < filesName.Count; Index++)
+                cols.Clear();
+                rows.Clear();
+                
+                for (var ind = 0; ind < filesName.Count; ind++)
                 {
-                    cols.Add(new KeyboardButton(filesName[Index]));
-                    if (Index % 3 != 0) continue;
+                    var newButton = new KeyboardButton(filesName[ind]);
+                    cols.Add(newButton);
+                    if (ind % 3 != 0) continue;
                     rows.Add(cols.ToArray());
                     cols = new List<KeyboardButton>();
                 }
 
                 rkm.Keyboard = rows.ToArray();
                 await botClient.SendTextMessageAsync(e.Message.Chat.Id, "Choose", replyMarkup: rkm);
+                Console.WriteLine("filesName.Count" + filesName.Count);
             }
 
             if (e.Message.Text == "smile")
@@ -119,12 +130,9 @@ namespace HW_9
 
             if (filesName.Contains(e.Message.Text) && e.Message.Text != "/start" && e.Message.Text != "/load")
             {
-                // botClient.SendDocumentAsync(e.Message.Chat.Id,
-                // document: "https://github.com/TelegramBots/book/raw/master/src/docs/photo-ara.jpg");
-
                 await using (Stream stream = File.OpenRead($"{fPath}/{e.Message.Text}"))
                 {
-                    botClient.SendDocumentAsync(
+                    await botClient.SendDocumentAsync(
                         chatId: e.Message.Chat.Id,
                         document: new InputOnlineFile(content: stream, fileName: e.Message.Text)
                     );
@@ -150,11 +158,14 @@ namespace HW_9
                 for (int i = 0; i < filesName.Count; i++)
                 {
                     filesName[i] = filesName[i].Remove(0, 6);
-                    // Console.WriteLine(filesName[i]);
+                    if (filesName.Where(x => x == filesName[i]).Count() > 1)
+                    {
+                        filesName.Remove(filesName[i]);
+                    }
                 }
             }
         }
-        
+
         private static void GetBotStatus()
         {
             var botStatus = botClient.GetMeAsync().Result;
@@ -169,11 +180,5 @@ namespace HW_9
                 dirInfo.Create();
             }
         }
-        
-        // private static async void SendFile(string name, Telegram.Bot.Args.MessageEventArgs e)
-        // {
-        //     InputOnlineFile inputOnlineFile = new InputOnlineFile("fileId");
-        //     await botClient.SendDocumentAsync(e.Message.Chat.Id, inputOnlineFile);
-        // }
     }
 }
